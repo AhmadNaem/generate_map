@@ -32,7 +32,7 @@ except FileNotFoundError as e:
 # Constants
 MAP_WIDTH = 1500  # Ukuran peta besar untuk pengujian
 MAP_HEIGHT = 1500
-CELL_SIZE = 15
+CELL_SIZE = 20
 ZOOM_FACTOR = 2
 SCALED_CELL_SIZE = CELL_SIZE * ZOOM_FACTOR
 MAP_SIZE_X = MAP_WIDTH // CELL_SIZE
@@ -43,14 +43,16 @@ def create_city_map():
     city_map = Image.new('RGB', (MAP_WIDTH, MAP_HEIGHT), BACKGROUND_COLOR)
     draw = ImageDraw.Draw(city_map)
 
-    def place_building(img, width, height, draw):
-        for _ in range(100):  # Batasi percobaan untuk menghindari loop tak terbatas
+    def place_building(img, width, height, draw, num_buildings):
+        attempts = 0
+        while num_buildings > 0 and attempts < 1000:
             x = random.randint(0, MAP_SIZE_X - width)
             y = random.randint(0, MAP_SIZE_Y - height)
             if is_area_free(x, y, width, height) and is_next_to_road(x, y, width, height):
                 city_map.paste(img.resize((width * CELL_SIZE, height * CELL_SIZE)), (x * CELL_SIZE, y * CELL_SIZE))
                 mark_area_used(x, y, width, height)
-                break
+                num_buildings -= 1
+            attempts += 1
 
     def is_area_free(x, y, width, height):
         if x + width > MAP_SIZE_X or y + height > MAP_SIZE_Y:
@@ -143,22 +145,21 @@ def create_city_map():
     draw_rivers()
 
     # Place buildings
-    place_building(big_building_img, 10, 5, draw)
+    place_building(big_building_img, 10, 5, draw, 10)  # Increase to 10 large buildings
+    place_building(medium_building_img, 5, 3, draw, 20)  # Increase to 20 medium buildings
+    place_building(small_building_img, 2, 2, draw, 50)  # Increase to 50 small buildings
+    place_building(house_img, 1, 2, draw, 60)  # Increase to 60 houses
 
-    for _ in range(4):
-        place_building(medium_building_img, 5, 3, draw)
+    # Place trees with smaller size
+    def place_trees(img, draw):
+        tree_resized = img.resize((CELL_SIZE, CELL_SIZE))
+        for y in range(MAP_SIZE_Y):
+            for x in range(MAP_SIZE_X):
+                if map_grid[y][x] == 0 and is_area_free(x, y, 1, 1):
+                    city_map.paste(tree_resized, (x * CELL_SIZE, y * CELL_SIZE))
+                    mark_area_used(x, y, 1, 1)
 
-    for _ in range(10):
-        place_building(small_building_img, 2, 2, draw)
-        place_building(house_img, 1, 2, draw)
-
-    # Place trees
-    for y in range(MAP_SIZE_Y):
-        for x in range(MAP_SIZE_X):
-            if map_grid[y][x] == 0 and is_area_free(x, y, 2, 2):
-                tree_resized = tree_img.resize((2 * CELL_SIZE, 2 * CELL_SIZE))
-                city_map.paste(tree_resized, (x * CELL_SIZE, y * CELL_SIZE))
-                mark_area_used(x, y, 2, 2)
+    place_trees(tree_img, draw)
     
     return city_map
 
@@ -224,3 +225,4 @@ generate_button.pack(pady=10, padx=10, side=tk.BOTTOM)
 redraw_map()  # Generate initial map
 
 root.mainloop()
+
