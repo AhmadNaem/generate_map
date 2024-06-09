@@ -33,7 +33,7 @@ except FileNotFoundError as e:
 MAP_WIDTH = 1500  # Ukuran peta besar untuk pengujian
 MAP_HEIGHT = 1500
 CELL_SIZE = 20
-ZOOM_FACTOR = 2
+ZOOM_FACTOR = 1.0
 SCALED_CELL_SIZE = CELL_SIZE * ZOOM_FACTOR
 MAP_SIZE_X = MAP_WIDTH // CELL_SIZE
 MAP_SIZE_Y = MAP_HEIGHT // CELL_SIZE
@@ -225,4 +225,3 @@ generate_button.pack(pady=10, padx=10, side=tk.BOTTOM)
 redraw_map()  # Generate initial map
 
 root.mainloop()
-
