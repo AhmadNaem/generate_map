@@ -5,11 +5,11 @@ import random
 import os
 
 # Path assets
-big_building_path = "D:/aset/bangunanbesar.jpg"
-medium_building_path = "D:/aset/bangunansedang.jpg"
-small_building_path = "D:/aset/bangunankecil.jpg"
-house_path = "D:/aset/rumah.jpg"
-tree_path = "D:/aset/pohon.jpg"
+big_building_path = "D:/PAA/aset/bangunanbesar.jpg"
+medium_building_path = "D:/PAA/aset/bangunansedang.jpg"
+small_building_path = "D:/PAA/aset/bangunankecil.jpg"
+house_path = "D:/PAA/aset/rumah.jpg"
+tree_path = "D:/PAA/aset/pohon.jpg"
 
 # Function to load images safely
 def load_image(path):
@@ -34,12 +34,15 @@ MAP_WIDTH = 1500  # Ukuran peta besar untuk pengujian
 MAP_HEIGHT = 1500
 CELL_SIZE = 20
 ZOOM_FACTOR = 1.0
-SCALED_CELL_SIZE = CELL_SIZE * ZOOM_FACTOR
 MAP_SIZE_X = MAP_WIDTH // CELL_SIZE
 MAP_SIZE_Y = MAP_HEIGHT // CELL_SIZE
 BACKGROUND_COLOR = "#33a46c"
 
+# Global variable to store city map
+city_map = None
+
 def create_city_map():
+    global city_map
     city_map = Image.new('RGB', (MAP_WIDTH, MAP_HEIGHT), BACKGROUND_COLOR)
     draw = ImageDraw.Draw(city_map)
 
@@ -164,8 +167,8 @@ def create_city_map():
     return city_map
 
 def redraw_map():
-    city_map = create_city_map()
-    scaled_city_map = city_map.resize((MAP_WIDTH * ZOOM_FACTOR, MAP_HEIGHT * ZOOM_FACTOR), Image.LANCZOS)
+    global city_map
+    scaled_city_map = city_map.resize((int(MAP_WIDTH * ZOOM_FACTOR), int(MAP_HEIGHT * ZOOM_FACTOR)), Image.LANCZOS)
     city_map_tk = ImageTk.PhotoImage(scaled_city_map)
     canvas.create_image(0, 0, anchor='nw', image=city_map_tk)
     canvas.config(scrollregion=canvas.bbox(tk.ALL))
@@ -183,6 +186,18 @@ def on_scroll_start(event):
 
 def on_scroll_move(event):
     canvas.scan_dragto(event.x, event.y, gain=1)
+
+# Zoom in function
+def zoom_in():
+    global ZOOM_FACTOR
+    ZOOM_FACTOR *= 1.2
+    redraw_map()
+
+# Zoom out function
+def zoom_out():
+    global ZOOM_FACTOR
+    ZOOM_FACTOR /= 1.2
+    redraw_map()
 
 # Set up GUI
 root = tk.Tk()
@@ -219,9 +234,17 @@ button_frame = tk.Frame(root)
 button_frame.pack(fill=tk.X)
 
 # Add the generate button
-generate_button = tk.Button(button_frame, text="Generate New Map", command=redraw_map)
-generate_button.pack(pady=10, padx=10, side=tk.BOTTOM)
+generate_button = tk.Button(button_frame, text="Generate New Map", command=lambda: [create_city_map(), redraw_map()])
+generate_button.pack(pady=10, padx=10, side=tk.LEFT)
 
-redraw_map()  # Generate initial map
+# Add zoom in and zoom out buttons
+zoom_in_button = tk.Button(button_frame, text="Zoom In", command=zoom_in)
+zoom_in_button.pack(pady=10, padx=10, side=tk.LEFT)
+
+zoom_out_button = tk.Button(button_frame, text="Zoom Out", command=zoom_out)
+zoom_out_button.pack(pady=10, padx=10, side=tk.LEFT)
+
+create_city_map()  # Generate initial map
+redraw_map()  # Draw the map
 
 root.mainloop()
